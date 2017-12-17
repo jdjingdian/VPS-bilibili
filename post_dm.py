@@ -21,7 +21,62 @@ dm_lock = False         #弹幕发送锁，用来排队
 encode_lock = False     #视频渲染锁，用来排队
 sensitive_word = ('64', '89') #容易误伤的和谐词汇表，待补充
 
+#JU补充的内容
+
 #检查已使用空间是否超过设置大小
+
+def del_ept():
+
+        send_dm_long('已收到管理员爸爸的指令，正在清空')
+        paths = path+'/downloads'   #获取目录下所有文件
+        for i in os.listdir(paths):
+            paths_file = os.path.join(paths,i)
+            
+            if os.path.isfile(paths_file):
+                os.remove(paths_file)
+            else:
+                for k in os.listdir(paths_file):  
+                    paths_file2 =os.path.join(paths_file,k)
+                    if os.path.isfile(paths_file2):
+                        os.remove(paths_file2)
+        send_dm_long('已经清空列表啦~~么么艹')
+
+def sc():
+    global songs_count
+    files = os.listdir(path+'/downloads')   #获取目录下所有文件
+    files.sort()    #按文件名（下载时间）排序
+    songs_count = 0 #项目数量
+    all_the_text = ""
+    for f in files:
+        if((f.find('.mp3') != -1) and (f.find('.download') == -1)): #如果是mp3文件
+            try:
+                info_file = open(path+'/downloads/'+f.replace(".mp3",'')+'.info', 'r')  #读取相应的info文件
+                all_the_text = info_file.read()
+                info_file.close()
+            except Exception as e:
+                print(e)
+                songs_count += 1
+        if((f.find('ok.flv') != -1) and (f.find('.download') == -1) and (f.find('rendering') == -1)):#如果是有ok标记的flv文件
+            try:
+                info_file = open(path+'/downloads/'+f.replace(".flv",'')+'.info', 'r')  #读取相应的info文件
+                all_the_text = info_file.read()
+                info_file.close()
+            except Exception as e:
+                print(e)
+            songs_count += 1
+            
+    if(songs_count == 0):
+        time.sleep(5)
+        os.system('killall ffmpeg')
+        send_dm('已切歌为用户点歌')
+        print('切歌了吗？')
+        songs_count
+        print('已经点播'+str(songs_count)+'首歌')
+    else:
+        send_dm('前面还有'+str(songs_count)+'个人哦')
+
+
+
 def check_free():
     files = os.listdir(path+'/downloads')  #获取下载文件夹下所有文件
     size = 0
@@ -309,15 +364,8 @@ def pick_msg(s, user):
         try:
             send_dm_long('已收到'+user+'的指令')
             search_song(s.replace('点歌', '', 1),user)
-            if(songs_count == 0):
-                time.sleep(5)
-                os.system('killall ffmpeg')
-                send_dm('已切歌为用户点歌')
-                print('切歌了吗？')
-                songs_count = 1
-                print('已经切歌列表重置为1')
-            else:
-                send_dm('前面还有人哦')           
+            ##########################################################################################################
+            sc()
         except:
             print('[log]song not found')
             send_dm_long('出错了：没这首歌')
@@ -368,6 +416,10 @@ def pick_msg(s, user):
             send_dm_long('点播列表展示完毕，一共'+str(songs_count)+'个')
         else:
             send_dm_long('点播列表前十个展示完毕，一共'+str(songs_count)+'个')
+    elif ((s == '清空列表') and (user=='Jarvis-Ultron') | (user=='JU的投食员')):
+        del_ept()
+    elif ((s == '清空列表') and (user!='Jarvis-Ultron') | (user!='JU的投食员')):
+        send_dm_long('小傻瓜你没权限~要跟我PY交易一下吗？')
     elif (s == '渲染列表'):
         send_dm_long('已收到'+user+'的指令，正在查询')
         files = os.listdir(path+'/downloads')   #获取目录下所有文件
