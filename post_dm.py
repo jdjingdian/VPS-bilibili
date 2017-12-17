@@ -22,6 +22,9 @@ encode_lock = False     #视频渲染锁，用来排队
 sensitive_word = ('64', '89') #容易误伤的和谐词汇表，待补充
 
 #JU补充的内容
+flag =False
+songs_count=0
+songs_c=0
 
 #检查已使用空间是否超过设置大小
 
@@ -42,7 +45,9 @@ def del_ept():
         send_dm_long('已经清空列表啦~~么么艹')
 
 def sc():
+    global flag
     global songs_count
+    global songs_c
     files = os.listdir(path+'/downloads')   #获取目录下所有文件
     files.sort()    #按文件名（下载时间）排序
     songs_count = 0 #项目数量
@@ -55,7 +60,8 @@ def sc():
                 info_file.close()
             except Exception as e:
                 print(e)
-                songs_count += 1
+            songs_count += 1
+            songs_c = songs_count -1
         if((f.find('ok.flv') != -1) and (f.find('.download') == -1) and (f.find('rendering') == -1)):#如果是有ok标记的flv文件
             try:
                 info_file = open(path+'/downloads/'+f.replace(".flv",'')+'.info', 'r')  #读取相应的info文件
@@ -64,16 +70,17 @@ def sc():
             except Exception as e:
                 print(e)
             songs_count += 1
-            
-    if(songs_count == 0):
-        time.sleep(5)
+            songs_c = songs_count -1
+    if(songs_count == 1):
+        time.sleep(3)
         os.system('killall ffmpeg')
         send_dm('已切歌为用户点歌')
         print('切歌了吗？')
-        songs_count
         print('已经点播'+str(songs_count)+'首歌')
     else:
-        send_dm('前面还有'+str(songs_count)+'个人哦')
+        send_dm('前面还有'+str(songs_c)+'个人哦')
+
+    flag = False
 
 
 
@@ -131,6 +138,7 @@ def del_file(f):
 def get_download_url(s, t, user, song = "nothing"):
    
     global encode_lock  #视频渲染锁，用来排队
+    global flag
     if(clean_files()):  #检查空间是否在设定值以内，并自动删除多余视频缓存
         send_dm_long('树莓存储空间已爆炸，请联系up')
         return
@@ -157,7 +165,10 @@ def get_download_url(s, t, user, song = "nothing"):
             else:   #当用关键字搜索点歌时
                 ass_maker.make_ass(filename,'当前网易云id：'+str(s)+"\\N点播关键词："+song+"\\N点播人："+user,path,lyric,tlyric)   #生成字幕
                 ass_maker.make_info(filename,'id：'+str(s)+",关键词："+song+",点播人："+user,path)    #生成介绍信息，用来查询
-            send_dm_long(t+str(s)+'下载完成，已加入播放队列')
+            send_dm_long('下载完成，已加入播放队列')#t+str(s)+
+            flag = True
+            if(flag == True):
+                sc()
             print('[log]已添加排队项目：'+t+str(s))
    
             
@@ -306,6 +317,7 @@ def search_mv(s,user):
 jump_to_next_counter = 0
 rp_lock = False
 def pick_msg(s, user):
+    global flag
     global songs_count
     global jump_to_next_counter #切歌请求次数统计
     global encode_lock  #视频渲染任务锁
@@ -365,10 +377,18 @@ def pick_msg(s, user):
             send_dm_long('已收到'+user+'的指令')
             search_song(s.replace('点歌', '', 1),user)
             ##########################################################################################################
-            sc()
         except:
             print('[log]song not found')
             send_dm_long('出错了：没这首歌')
+
+
+            
+    elif(flag == True):
+        sc()
+
+
+
+        
     elif (s.find('喵') > -1):
         replay = ["喵？？", "喵喵！", "喵。。喵？", "喵喵喵~", "喵！"]
         send_dm_long(replay[random.randint(0, len(replay))])  #用于测试是否崩掉
@@ -418,6 +438,7 @@ def pick_msg(s, user):
             send_dm_long('点播列表前十个展示完毕，一共'+str(songs_count)+'个')
     elif ((s == '清空列表') and (user=='Jarvis-Ultron') | (user=='JU的投食员')):
         del_ept()
+    ##############################################################
     elif ((s == '清空列表') and (user!='Jarvis-Ultron') | (user!='JU的投食员')):
         send_dm_long('小傻瓜你没权限~要跟我PY交易一下吗？')
     elif (s == '渲染列表'):
