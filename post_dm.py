@@ -17,10 +17,8 @@ path = var_set.path         #引入设置路径
 roomid = var_set.roomid     #引入设置房间号
 cookie = var_set.cookie     #引入设置cookie
 download_api_url = var_set.download_api_url #引入设置的音乐下载链接获取接口
-
 dm_lock = False         #弹幕发送锁，用来排队
 encode_lock = False     #视频渲染锁，用来排队
-
 sensitive_word = ('64', '89') #容易误伤的和谐词汇表，待补充
 
 #检查已使用空间是否超过设置大小
@@ -76,6 +74,7 @@ def del_file(f):
 #user：字符串型，点播者
 #song：歌名，点播时用的关键字，可选
 def get_download_url(s, t, user, song = "nothing"):
+   
     global encode_lock  #视频渲染锁，用来排队
     if(clean_files()):  #检查空间是否在设定值以内，并自动删除多余视频缓存
         send_dm_long('树莓存储空间已爆炸，请联系up')
@@ -105,6 +104,8 @@ def get_download_url(s, t, user, song = "nothing"):
                 ass_maker.make_info(filename,'id：'+str(s)+",关键词："+song+",点播人："+user,path)    #生成介绍信息，用来查询
             send_dm_long(t+str(s)+'下载完成，已加入播放队列')
             print('[log]已添加排队项目：'+t+str(s))
+   
+            
         elif(t == 'mv'):    #当参数为mv时
             urllib.request.urlretrieve(url, path+'/downloads/'+filename+'.mp4') #下载mv
             if(song == "nothing"):  #当直接用id点mv时
@@ -136,9 +137,9 @@ def get_download_url(s, t, user, song = "nothing"):
         del_file(filename+'.mp4')
         del_file(filename+'.flv')
     return url
-
-#下载歌单
-def playlist_download(id,user):
+    
+    
+#下载歌单def playlist_download(id,user):
     params = urllib.parse.urlencode({'playlist': str(id)}) #格式化参数
     f = urllib.request.urlopen(download_api_url + "?%s" % params)   #设定获取的网址
     try:
@@ -188,7 +189,7 @@ def download_bilibili(video_url,user):
 def download_av(video_url,user):
     global encode_lock
     if(clean_files()):
-        send_dm_long('树莓存储空间已爆炸，请联系up')
+        send_dm_long('VPS存储空间已爆炸，请联系up')
         return
     try:
         print('[log]downloading bilibili video:'+str(video_url))
@@ -250,17 +251,18 @@ def search_mv(s,user):
 jump_to_next_counter = 0
 rp_lock = False
 def pick_msg(s, user):
+    global songs_count
     global jump_to_next_counter #切歌请求次数统计
     global encode_lock  #视频渲染任务锁
     global rp_lock
-    if ((user=='晨旭') | (user=='摘希喵喵喵')):    #debug使用，请自己修改
+    if ((user=='JU的投食员') | (user=='JU的投食员')):    #debug使用，请自己修改
         if(s=='锁定'):
             rp_lock = True
             send_dm_long('已锁定点播功能，不响应任何弹幕')
         if(s=='解锁'):
             rp_lock = False
             send_dm_long('已解锁点播功能，开始响应弹幕请求')
-    if((user == '接待喵') | rp_lock):  #防止自循环
+    if((user == 'JU的投食员') | rp_lock):  #防止自循环
         return
     #下面的不作解释，很简单一看就懂
     if(s.find('mvid+') == 0):
@@ -307,6 +309,15 @@ def pick_msg(s, user):
         try:
             send_dm_long('已收到'+user+'的指令')
             search_song(s.replace('点歌', '', 1),user)
+            if(songs_count == 0):
+                time.sleep(5)
+                os.system('killall ffmpeg')
+                send_dm('已切歌为用户点歌')
+                print('切歌了吗？')
+                songs_count = 1
+                print('已经切歌列表重置为1')
+            else:
+                send_dm('前面还有人哦')           
         except:
             print('[log]song not found')
             send_dm_long('出错了：没这首歌')
@@ -318,7 +329,7 @@ def pick_msg(s, user):
             send_dm_long('有渲染任务，无法切歌')
             return
         jump_to_next_counter += 1   #切歌次数统计加一
-        if((user=='晨旭') | (user=='摘希喵喵喵')): #debug使用，请自己修改
+        if((user=='Jarvis-Ultron') | (user=='JU的投食员')): #debug使用，请自己修改
             jump_to_next_counter=5
         if(jump_to_next_counter < 5):   #次数未达到五次
             send_dm_long('已收到'+str(jump_to_next_counter)+'次切歌请求，达到五次将切歌')
