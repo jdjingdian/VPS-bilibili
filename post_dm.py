@@ -21,12 +21,25 @@ dm_lock = False         #弹幕发送锁，用来排队
 encode_lock = False     #视频渲染锁，用来排队
 sensitive_word = ('64', '89') #容易误伤的和谐词汇表，待补充
 
+
+
+#补充的模块1.切歌优化模块sc 2.清空列表模块del_ept 3.弹幕感谢礼物模块gift_dm
 #JU补充的内容
 flag =False
 songs_count=0
 songs_c=0
 
+
 #检查已使用空间是否超过设置大小
+
+#def gift_dm():
+#        send_dm('收到礼物')
+
+
+
+def gift_dm():
+        global s
+        print('test'+s)
 
 def del_ept():
 
@@ -42,6 +55,7 @@ def del_ept():
                     paths_file2 =os.path.join(paths_file,k)
                     if os.path.isfile(paths_file2):
                         os.remove(paths_file2)
+        os.system('killall ffmpeg')
         send_dm_long('已经清空列表啦~~么么艹')
 
 def sc():
@@ -145,6 +159,8 @@ def get_download_url(s, t, user, song = "nothing"):
     send_dm_long('正在下载'+t+str(s))
     print('[log]getting url:'+t+str(s))
     params = urllib.parse.urlencode({t: s}) #格式化参数
+##FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    
     f = urllib.request.urlopen(download_api_url + "?%s" % params)   #设定获取的网址
     url = f.read().decode('utf-8')  #读取结果
     try:
@@ -440,7 +456,7 @@ def pick_msg(s, user):
         del_ept()
     ##############################################################
     elif ((s == '清空列表') and (user!='Jarvis-Ultron') | (user!='JU的投食员')):
-        send_dm_long('小傻瓜你没权限~要跟我PY交易一下吗？')
+        send_dm_long('小傻瓜你没权限~小傻瓜你没权限~要跟我PY交易一下吗？')
     elif (s == '渲染列表'):
         send_dm_long('已收到'+user+'的指令，正在查询')
         files = os.listdir(path+'/downloads')   #获取目录下所有文件
@@ -553,9 +569,10 @@ def send_dm(s):
     
 #每条弹幕最长只能发送20字符，过长的弹幕分段发送
 def send_dm_long(s):
-    n=20
+    n=30
     for hx in sensitive_word:                  #处理和谐词，防止点播机的回复被和谐
         if (s.find(hx) > -1):
+                #SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSA=
             s = s.replace(hx, hx[0]+" "+hx[1:])    #在和谐词第一个字符后加上一个空格
     for i in range(0, len(s), n):
         send_dm(s[i:i+n])
@@ -586,6 +603,13 @@ def get_dm():
         #print('[log]['+t_get['timeline']+']'+t_get['nickname']+':'+t_get['text'])
     return dm_result
 
+
+
+###收到礼物回复弹幕
+
+        
+        
+
 #检查某弹幕是否与前一次获取的弹幕数组有重复
 def check_dm(dm):
     global temp_dm
@@ -596,6 +620,7 @@ def check_dm(dm):
 
 #弹幕获取函数，原理为不断循环获取指定直播间的初始弹幕，并剔除前一次已经获取到的弹幕，余下的即为新弹幕
 def get_dm_loop():
+
     global temp_dm
     temp_dm = get_dm()
     while True:
@@ -605,6 +630,11 @@ def get_dm_loop():
             if(check_dm(t_get)):
                 print('[log]['+t_get['timeline']+']'+t_get['nickname']+':'+t_get['text'])
                 #send_dm('用户'+t_get['nickname']+'发送了'+t_get['text']) #别开，会死循环
+
+#################
+                #print('[JU-test]'+json.loads(urllib.request.urlopen(urllib.request.Request("http://api.live.bilibili.com/ajax/msg",postdata,header)).read().decode('utf-8')))
+
+   ####################             
                 text = t_get['text'].replace(' ', '')   #剔除弹幕中的所有空格
                 pick_msg(text,t_get['nickname'])   #新弹幕检测是否匹配为命令
         temp_dm = dm_result
